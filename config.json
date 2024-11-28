@@ -1,0 +1,5 @@
+{
+    "SESSION_TIMEOUT": 300,
+    "DOWNLOAD_PATH": "./downloads",
+    "SECRET_KEY": "21op3u289uhriosdjfawde9i923yuer9"
+  }

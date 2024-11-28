@@ -64,17 +64,20 @@ def get_session_object():
         return SessionObject.from_dict(json.loads(session["session_obj"]))
 
     # If session_obj doesn't exist (new user), it will create a new object
-    user_id = str(str(time.time()))
+    user_id = str(hash(request.remote_addr+ str(time.time())))
     session_obj = SessionObject(user_id)
     save_session_object(session_obj)
     return session_obj
 
+# Import config file
+with open("config.json") as f:
+    globalConfig = json.load(f)
 
 
 app = Flask(__name__)
-SESSION_TIMEOUT = 300 # 5 mins
-DOWNLOAD_PATH = "./downloads"  # Directory to store downloaded files
-app.secret_key = 'ifjwu1893893efvbudc' # Encryption key for local client-side cookie
+SESSION_TIMEOUT = globalConfig["SESSION_TIMEOUT"] # 5 mins
+DOWNLOAD_PATH = globalConfig["DOWNLOAD_PATH"]  # Directory to store downloaded files
+app.secret_key = globalConfig["SECRET_KEY"] # Encryption key for local client-side cookie
 
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1) # Keeps IP after nginx reverse proxy
 
@@ -164,7 +167,7 @@ def make_logs(log, file, url=None, name=None):
     filePath = os.path.join(DIRECTORY, file)
     openFile = open(filePath, "a")
     # LOG FACTORY
-    if log is "download":
+    if log == "download":
         stringToWrite = request.headers.get('User-Agent') + "   " + name + "  " + url + "\n"
         openFile.write(stringToWrite)
     openFile.close

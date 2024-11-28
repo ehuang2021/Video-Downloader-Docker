@@ -4,9 +4,8 @@ FROM python:3.11-slim-bullseye
 # Install system dependencies
 RUN apt-get update && \
     apt-get install -y ffmpeg curl && \
-    rm -rf /var/lib/apt/lists/*
-
-RUN pip install --upgrade pip
+    rm -rf /var/lib/apt/lists/* && \
+    pip install --upgrade pip
 
 # Install yt-dlp using pip
 RUN pip install --no-cache-dir yt-dlp
@@ -25,7 +24,7 @@ COPY . .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Ensure scripts are executable
-RUN chmod +x yt-dip.sh
+RUN chmod +x yt.dip.sh
 RUN chmod +x get.filename.sh
 
 # Create downloads directory
