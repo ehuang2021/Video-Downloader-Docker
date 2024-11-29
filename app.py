@@ -159,7 +159,7 @@ def error_management(message):
     if "is not a valid URL" in message:
         return "Invalid URL"
     else:
-        return "Something Went Wrong"
+        return message
     
 def make_logs(log, file, url=None, name=None):
     DIRECTORY = "./logs"
