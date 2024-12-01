@@ -2,31 +2,32 @@
 <html>
 <head>
     <title>Video Downloader</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        h1 { color: #333; }
-        form { margin-bottom: 20px; }
-        input[type="text"] { width: 80%; padding: 8px; }
-        input[type="submit"] { padding: 8px 16px; }
-        .message { margin-bottom: 20px; color: green; }
-        .error { margin-bottom: 20px; color: red; }
-        ul { list-style-type: none; padding: 0; }
-        li { margin-bottom: 10px; }
-        a { text-decoration: none; color: #0066cc; }
-        a:hover { text-decoration: underline; }
-        .logout { margin-top: 20px; }
-    </style>
+    <!-- Link to External CSS -->
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
     <h1>Video Downloader</h1>
+    
     {% if message %}
         <p class="{{ 'error' if 'ERROR' in message else 'message' }}">{{ message }}</p>
     {% endif %}
+    
+    <!-- Dropdown Form -->
+    <form class="dropdown-form" action="{{ url_for('download_options') }}" method="post">
+        <label for="download-type">Download Type:</label>
+        <select id="download-type" name="download_type" onchange="this.form.submit()">
+            <option value="video" {% if current_option == 'video' %}selected{% endif %}>Video</option>
+            <option value="audio" {% if current_option == 'audio' %}selected{% endif %}>Audio</option>
+        </select>
+    </form>
+    
+    <!-- Download Form -->
     <form action="{{ url_for('download') }}" method="post">
         <label for="url">Video URL:</label><br>
         <input type="text" id="url" name="url" required>
         <input type="submit" value="Download">
     </form>
+    
     <h2>Downloaded Files:</h2>
     {% if files %}
         <ul>
@@ -37,6 +38,7 @@
     {% else %}
         <p>No files downloaded yet.</p>
     {% endif %}
+    
     <div class="logout">
         <form action="{{ url_for('logout') }}" method="get">
             <input type="submit" value="Clear files">
