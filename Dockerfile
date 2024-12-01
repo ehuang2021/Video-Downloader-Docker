@@ -5,8 +5,7 @@ FROM python:3.11-slim-bullseye
 RUN apt-get update && \
     apt-get install -y ffmpeg curl && \
     rm -rf /var/lib/apt/lists/* && \
-    pip install --no-cache-dir yt-dlp \
-    pip install ffmpeg
+    pip install --no-cache-dir yt-dlp
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
