@@ -1,4 +1,5 @@
 from flask import Flask, request, render_template, send_from_directory, session, redirect, url_for
+from manage_download import download_file
 import subprocess
 import os
 import threading
@@ -8,11 +9,17 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 
 # SessionObject class, used for tracking multiple sessions:
 class SessionObject:
+
+
+
     def __init__(self, user_ID):
         self.user_id = user_ID
         self.downloaded_files = []
         self.user_path = os.path.join(DOWNLOAD_PATH, self.user_id)
+        self.download_type = "video" # Default download settings
+        self.download_quality = "best"
         os.makedirs(self.user_path, exist_ok=True) # Create directory to store all of users data
+
 
     def add_file(self, filename):
         # Adds the file to user's session list
@@ -31,11 +38,14 @@ class SessionObject:
             os.rmdir(self.user_path)
         self.downloaded_files = []
 
+
     def to_dict(self):
         # Turns itself into a dictionary for storage within session object
         return {
             "user_id": self.user_id,
             "downloaded_files": self.downloaded_files,
+            "download_type" : self.download_type,
+            "download_quality" : self.download_quality
         }
     
     @staticmethod
@@ -43,6 +53,8 @@ class SessionObject:
         # Rebuilds Session Object from Dictionary
         session_obj = SessionObject(data["user_id"])
         session_obj.downloaded_files = data.get("downloaded_files")
+        session_obj.download_type = data.get("download_type")
+        session_obj.download_quality = data.get("download_quality")
         return session_obj
 
 def get_client_ip():
@@ -88,7 +100,8 @@ cleanup_timers = {}
 def index():
     session_obj = get_session_object()
     reset_timer(session_obj.user_id) # Resets the timeout timer
-    return render_template('index.html', files=session_obj.get_files())
+    current_download_type = session_obj.download_type 
+    return render_template('index.html', files=session_obj.get_files(), current_option=current_download_type)
 
 @app.route('/download', methods=['POST'])
 def download():
@@ -99,10 +112,10 @@ def download():
         return render_template('index.html', messages="No URL provided.", files=session_obj.get_files())
 
     try:
-        # Execute the yt-dip.sh script with the provided URL
-        subprocess.run(['./yt.dip.sh', url, session_obj.user_path], capture_output=True, text=True, check=True) # can fix output maybe with different params
+        download_file(url, session_obj.user_path, session_obj.download_type) # Execute the yt-dip.sh script with the provided URL
+         # can fix output maybe with different params
         try:
-            titleResult = subprocess.run(['./get.filename.sh', url], capture_output=True, text=True, check=True)
+            titleResult = subprocess.run(['./get.filename.sh', url, session_obj.download_type], capture_output=True, text=True, check=True)
             filename = titleResult.stdout.strip()
             session_obj.add_file(filename) # Add file name to obj file list
             save_session_object(session_obj)
@@ -122,6 +135,15 @@ def download():
 def serve_file(filename):
     # Serve the requested file as a downloadable attachment
     return send_from_directory(get_session_object().user_path, filename, as_attachment=True)
+
+@app.route('/set_option', methods=['POST'])
+def download_options():
+    session_obj = get_session_object()
+    session_obj.download_type = request.form.get('download_type')
+
+    save_session_object(session_obj)
+    return redirect(url_for('index'))
+
 
 @app.route('/logout')
 def logout():
